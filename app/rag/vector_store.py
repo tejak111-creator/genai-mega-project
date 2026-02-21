@@ -7,12 +7,12 @@ import numpy as np
 try:
     import faiss
 except ImportError as e:
-    raise ImportError("faiss is not installed. Rim: pip install faiss-cpu") from e
+    raise ImportError("faiss is not installed. Run: pip install faiss-cpu") from e
 
 from app.rag.models import DocumentChunk
 from app.rag.embeddings import EmbeddingProvider
 
-@dataclass 
+@dataclass(frozen=True)
 class SearchResult:
     chunk: DocumentChunk
     score: float #lower is better for L2 distance
