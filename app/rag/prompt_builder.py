@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from types import List
+from typing import List
 from app.rag.vector_store import SearchResult
 
 def build_rag_prompt(question: str, results: List[SearchResult]) -> str:

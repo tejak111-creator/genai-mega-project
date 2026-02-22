@@ -21,4 +21,22 @@ def basic_input_guard(prompt: str) -> GuardrailResult:
     if any(b in lower for b in banned):
         return GuardrailResult(False, "disallowed_content")
     
+    #PROMPT INJECTION DETECTION *******
+    blocked_phrases = [
+        "ignore previous instructions",
+        "system prompt",
+        "developer message",
+        "reveal hidden",
+        "print the prompt",
+        "jailbreak",
+    ]
+
+    for phrase in blocked_phrases:
+        if phrase in lower:
+            return GuardrailResult(
+                allowed=False,
+                reason=f"prompt_injection:{phrase}"
+            )
+
+    
     return GuardrailResult(True)

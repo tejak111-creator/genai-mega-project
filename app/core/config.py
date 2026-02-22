@@ -7,8 +7,8 @@ class Settings(BaseSettings):
     log_level: str = "INFO"
     
     #LLM settings(we will wire later)
-    llm_provider : str = "openai" # or "local"
-    llm_model: str = "gpt-4o-mini"
+    llm_provider : str = "stub" # or "local"
+    llm_model: str = "dummy"
 
     #Rate limiting(we will implement Day 18)
     rate_limit_per_minute: int = 60

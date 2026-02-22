@@ -1,4 +1,4 @@
-from app.rag.loader import load_text_file
+from app.rag.loader import load_text_files
 from app.rag.chunker import chunk_document
 from app.rag.embeddings import SentenceTransformerProvider
 from app.rag.vector_store import FaissVectorStore
@@ -7,7 +7,7 @@ from app.rag.pipeline import RagPipeline
 from app.core.llm import get_provider
 
 def main():
-    text = load_text_file("data/sample.txt")
+    text = load_text_files("data/sample.txt")
     chunks = chunk_document(text, doc_id="sample.txt")
     embedder = SentenceTransformerProvider("all-MiniLM-L6-v2")
     vectors = embedder.embed([c.text for c in chunks])
