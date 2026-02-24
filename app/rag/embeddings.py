@@ -1,6 +1,8 @@
 from __future__ import annotations
 from typing import List
 import numpy as np
+from app.core.config import settings
+from app.rag.hf_embeddings import HFEmbeddingProvider
 from sentence_transformers import SentenceTransformer
 
 
@@ -28,7 +30,7 @@ class SentenceTransformerProvider(EmbeddingProvider):
     Model: all-MiniLM-L6-v2
     
     """
-    def __init__(self, model_name: str = "all-MiniLM-L6-v2") -> None:
+    def __init__(self, model_name: str = "sentence-transformers/all-MiniLM-L6-v2") -> None:
         self.model = SentenceTransformer(model_name)
         self.model_name = model_name
         sample = self.model.encode(["dimension probe"], convert_to_numpy = True, normalize_embeddings = True)
@@ -51,3 +53,12 @@ class SentenceTransformerProvider(EmbeddingProvider):
 
         return [vectors[i] for i in range(len(vectors))]
     
+def get_embedding_provider() -> EmbeddingProvider:
+    if settings.embedding_provider == "sentence":
+        return SentenceTransformerProvider(settings.embedding_model)
+    if settings.embedding_provider == "hf":
+        return HFEmbeddingProvider(settings.embedding_model)
+    
+    raise ValueError("Unsupported embedding provider")
+
+

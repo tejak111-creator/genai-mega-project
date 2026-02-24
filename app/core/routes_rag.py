@@ -10,6 +10,7 @@ from app.rag.retriever import Retriever
 from app.rag.pipeline import RagPipeline
 from app.rag.loader import load_text_files
 from app.rag.chunker import chunk_document
+from app.rag.embeddings import get_embedding_provider
 
 router = APIRouter(tags=["rags"])
 
@@ -17,7 +18,7 @@ def _build_store_from_sample() -> tuple[FaissVectorStore, SentenceTransformerPro
     text = load_text_files("data/sample.txt")
     chunks = chunk_document(text, doc_id="sample.txt")
     
-    embedder = SentenceTransformerProvider("all-MiniLM-L6-v2")
+    embedder = get_embedding_provider()
     vectors = embedder.embed([c.text for c in chunks])
 
     dim = vectors[0].shape[0]

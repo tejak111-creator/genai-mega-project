@@ -5,6 +5,9 @@ class Settings(BaseSettings):
     app_name: str = "genai-mega-no-ui"
     env: str = "dev"
     log_level: str = "INFO"
+
+    embedding_provider: str = "hf"
+    embedding_model: str = "sentence-transformers/all-MiniLM-L6-v2"
     
     #LLM settings(we will wire later)
     llm_provider : str = "stub" # or "local"
