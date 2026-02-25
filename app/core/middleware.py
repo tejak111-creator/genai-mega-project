@@ -21,6 +21,7 @@ async def request_context_middleware(request: Request, call_next: Callable) -> R
         return response
     except Exception:
         status_code = 500
+        return Response(content="Internal Server Error", status_code=500)
     finally: #ALWAYS RUNS EVEN FOR EXCEPTIONS
         latency_ms = int((time.perf_counter() - start)*1000)
         #Attach useful fields into log record via "extra"

@@ -1,31 +1,36 @@
 from __future__ import annotations
 
-from typing import Any, Dict, Callable
+from dataclasses import dataclass
+from typing import Any, Callable, Dict
 
+
+@dataclass
 class Tool:
-    """
-    Represents a callable tool the agent can use.
-    """
-    def __init__(self, name: str, description: str, func: Callable[..., Any]):
-        self.name = name
-        self.description = description
-        self.func = func
-    def run(self, **kwargs) -> Any:
-        return self.func(**kwargs)
+    name: str
+    description: str
+    fn: Callable[..., Any]
+
+    def run(self, *args, **kwargs) -> Any:
+        """
+        Execute the underlying tool function.
+
+        We accept *args/**kwargs so different tools can have different signatures.
+        MultiStepAgent will try kwargs first; if needed it can fall back to positional.
+        """
+        return self.fn(*args, **kwargs)
+
+
 class ToolRegistry:
-    """
-    Stores all available tools.
-    """
     def __init__(self):
         self.tools: Dict[str, Tool] = {}
-    def register(self, tool: Tool):
+
+    def register(self, tool: Tool) -> None:
         self.tools[tool.name] = tool
+
     def get(self, name: str) -> Tool:
-        if name not in self.tools:
-            raise ValueError(f"Tool {name} not found")
         return self.tools[name]
+
     def list_descriptions(self) -> str:
-        lines = []
-        for t in self.tools.values():
-            lines.append(f"{t.name}: {t.description}")
-        return "\n".join(lines)
+        return "\n".join(
+            [f"- {t.name}: {t.description}" for t in self.tools.values()]
+        )

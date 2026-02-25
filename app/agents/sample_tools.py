@@ -1,17 +1,18 @@
 from __future__ import annotations
 
-def calculator(expression: str) -> str:
-    """
-    Very simple calculator tool
-    """
+
+def calculator(expression: str = "", **kwargs) -> str:
+    expr = expression.strip()
+
+    allowed = set("0123456789+-*/(). %")
+    if any(ch not in allowed for ch in expr):
+        return "Invalid expression"
+
     try:
-        result = eval(expression)
-        return str(result)
+        return str(eval(expr, {"__builtins__": {}}))
     except Exception as e:
-        return f"error: {e}"
-    
-def text_length(text: str) -> str:
-    """
-    Returns length of text.
-    """
+        return f"Error: {e}"
+
+
+def text_length(text: str = "", **kwargs) -> str:
     return str(len(text))
