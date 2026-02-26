@@ -4,7 +4,7 @@ import numpy as np
 from app.core.config import settings
 from app.rag.hf_embeddings import HFEmbeddingProvider
 from sentence_transformers import SentenceTransformer
-
+from app.core.cache import SimpleCache
 
 #EmbeddingProvider will be an interface
 #We separate Pipeline Logic and Model Logic
@@ -55,10 +55,35 @@ class SentenceTransformerProvider(EmbeddingProvider):
     
 def get_embedding_provider() -> EmbeddingProvider:
     if settings.embedding_provider == "sentence":
-        return SentenceTransformerProvider(settings.embedding_model)
-    if settings.embedding_provider == "hf":
-        return HFEmbeddingProvider(settings.embedding_model)
-    
-    raise ValueError("Unsupported embedding provider")
+        base = SentenceTransformerProvider(settings.embedding_model)
+    elif settings.embedding_provider == "hf":
+        base = HFEmbeddingProvider(settings.embedding_model)
+    else:
+        raise ValueError("Unsupported embedding provider")
+    return CachedEmbeddingProvider(base)
+_embedding_cache = SimpleCache()
 
-
+class CachedEmbeddingProvider(EmbeddingProvider):
+    def __init__(self, inner: EmbeddingProvider):
+        self.inner = inner
+    def embed(self,texts: List[str]) -> List[np.ndarray]:
+        vectors: List[np.ndarray] = []
+        missing: List[str] = []
+        #First pass: try cache
+        for t in texts:
+            hit = _embedding_cache.get("embed", t)
+            if hit is None:
+                missing.append(t)
+                vectors.append(None) # placeholder
+            else:
+                vectors.append(hit)
+        if missing:
+            computed = self.inner.embed(missing)
+            mi = 0
+            for i in range(len(vectors)):
+                if vectors[i] is None:
+                    v = computed[mi]
+                    _embedding_cache.set(v, "embed", texts[i])
+                    vectors[i] = v
+                    mi += 1
+        return vectors
