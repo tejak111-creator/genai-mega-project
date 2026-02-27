@@ -9,6 +9,7 @@ from app.rag.models import DocumentChunk
 from app.rag.embeddings import get_embedding_provider
 from app.rag.vector_store import FaissVectorStore, SearchResult
 from app.rag.retrieval_cache import get_cached_results, set_cached_results
+from app.core.llm import get_provider
 
 
 @dataclass
@@ -18,14 +19,19 @@ class RagConfig:
     chunk_overlap: int = 80
 
 
+@dataclass
+class RagRunResult:
+    answer: str
+    results: List[SearchResult]
+
+
 class RagPipeline:
     def __init__(self, config: RagConfig):
         self.config = config
         self.embedder = get_embedding_provider()
 
-        # Try load index, else create empty (build later)
-        loaded = FaissVectorStore.load(self.config.index_dir)
-        self.store = loaded
+        # Try load index; if not present, FaissVectorStore.load should return None or empty store
+        self.store = FaissVectorStore.load(self.config.index_dir)
 
     def build_from_files(self, paths: List[str]) -> None:
         """
@@ -54,11 +60,9 @@ class RagPipeline:
 
         # Save for next startup
         store.save(self.config.index_dir)
-
         self.store = store
 
     def retrieve(self, query: str, top_k: int = 3) -> List[SearchResult]:
-        # Retrieval cache first
         cached = get_cached_results(query, top_k)
         if cached is not None:
             return cached
@@ -69,3 +73,24 @@ class RagPipeline:
         results = self.store.search(query, self.embedder, top_k=top_k)
         set_cached_results(query, top_k, results)
         return results
+
+    def run(self, question: str, top_k: int = 3) -> RagRunResult:
+        results = self.retrieve(question, top_k=top_k)
+
+        context = "\n\n".join(
+            f"[{i+1}] doc={r.chunk.doc_id} chunk={r.chunk.chunk_id}\n{r.chunk.text}"
+            for i, r in enumerate(results)
+        )
+
+        prompt = (
+            "You are a helpful assistant. Use ONLY the context.\n"
+            "If the answer is not in the context, say you don't know.\n\n"
+            f"Context:\n{context}\n\n"
+            f"Question: {question}\n"
+            "Answer:"
+        )
+
+        llm = get_provider()
+        answer = llm.generate(prompt).strip()
+
+        return RagRunResult(answer=answer, results=results)
