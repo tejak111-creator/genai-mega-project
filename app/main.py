@@ -1,4 +1,7 @@
-from fastapi import FastAPI
+import traceback
+
+from fastapi import FastAPI, Request
+from fastapi.responses import PlainTextResponse
 from app.core.config import settings 
 from app.core.logging import setup_logging
 from app.core.middleware import request_context_middleware
@@ -14,7 +17,10 @@ def create_app() -> FastAPI:
     setup_logging()
     
     app = FastAPI(title=settings.app_name)
-
+    @app.exception_handler(Exception)
+    async def debug_exception_handler(request: Request, exc: Exception):
+        traceback.print_exc()  # prints full traceback in terminal
+    
     """"
     For every HTTP request, run request_context_middleware before and after the endpoint.
     http" means:
