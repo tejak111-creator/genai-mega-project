@@ -11,6 +11,7 @@ class DocumentChunk:
     chunk_id: int
     start_char: int
     end_char: int
+    modality: str  # text or image
 
 #Modify chunker to return structured objects instead of strings
 
