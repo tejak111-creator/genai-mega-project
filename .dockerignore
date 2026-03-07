@@ -1,0 +1,35 @@
+# Python
+.venv/
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.pytest_cache/
+.mypy_cache/
+
+# Git
+.git/
+.gitignore
+
+# OS/editor
+.DS_Store
+Thumbs.db
+.vscode/
+
+# Env/secrets
+.env
+*.pem
+*.key
+
+# Data / models / caches (adjust to your repo)
+
+models/
+*.bin
+*.pt
+*.pth
+*.onnx
+*.safetensors
+*.ckpt
+
+# Logs
+*.log

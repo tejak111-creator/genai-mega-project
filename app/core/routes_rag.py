@@ -4,7 +4,6 @@ from fastapi import APIRouter, Header, HTTPException
 from pathlib import Path
 
 from app.core.guardrails import basic_input_guard
-from app.core.llm import get_provider
 from app.rag.api_models import RagChatRequest, RagChatResponse, RagSource
 from app.rag.pipeline import RagPipeline, RagConfig
 
@@ -21,17 +20,19 @@ pipeline = RagPipeline(
 
 
 # -------------------------
-# Ensure index exists on startup
+# Ensure index exists lazily
 # -------------------------
 
+BASE_DIR = Path(__file__).resolve().parents[2]   # /app inside container
+INDEX_DIR = BASE_DIR / "data" / "index"
+SAMPLE_FILE = BASE_DIR / "data" / "sample.txt"
+
+
 def ensure_index():
-    index_dir = Path("data/index")
-
-    if not (index_dir / "vectors.faiss").exists():
-        pipeline.build_from_files(["data/sample.txt"])
-
-
-ensure_index()
+    if not (INDEX_DIR / "vectors.faiss").exists():
+        if not SAMPLE_FILE.exists():
+            raise FileNotFoundError(f"{SAMPLE_FILE} not found")
+        pipeline.build_from_files([str(SAMPLE_FILE)])
 
 
 # -------------------------
@@ -50,6 +51,12 @@ def rag_chat(
     guard = basic_input_guard(req.question)
     if not guard.allowed:
         raise HTTPException(status_code=400, detail=f"blocked: {guard.reason}")
+
+    # Ensure index only when needed
+    try:
+        ensure_index()
+    except FileNotFoundError as e:
+        raise HTTPException(status_code=500, detail=str(e))
 
     # Run pipeline
     result = pipeline.run(req.question, top_k=req.top_k)
