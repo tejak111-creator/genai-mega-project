@@ -8,5 +8,5 @@ def load_text_files(path: str) -> str:
     
     return p.read_text(encoding="utf-8")
 
-result = load_text_files("data/sample.txt")
-print(result)
+#result = load_text_files("data/sample.txt")
+#print(result)
